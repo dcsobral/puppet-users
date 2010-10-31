@@ -1,0 +1,16 @@
+= users puppet module =
+
+Manages user configuration.
+
+Supported corrective actions under: Debian.
+
+== Classes ==
+
+  * users
+  * users::infra
+  * users::devel
+
+== Definitions ==
+
+  * users::account
+
