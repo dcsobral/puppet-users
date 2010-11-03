@@ -35,16 +35,16 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
     case $uid {
         '': {
             group { "$username":
-                ensure   => $ensure,
-                allowdup => false,
+                ensure    => $ensure,
+                allowdupe => false,
             }
         }
         default: {
             group { "$username":
-                ensure   => $ensure,
-                gid      => $uid,
-                allowdup => false,
-                require  => Users::Groupsanity["$uid"],
+                ensure    => $ensure,
+                gid       => $uid,
+                allowdupe => false,
+                require   => Users::Groupsanity["$uid"],
             }
         }
     }
@@ -58,7 +58,7 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
                 home       => "/home/$username",
                 shell      => $shell,
                 allowdupe  => false,
-                passwd     => $password,
+                password   => $password,
                 managehome => true,
                 require    => Group["$username"],
             }
@@ -73,7 +73,7 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
                 home       => "/home/$username",
                 shell      => $shell,
                 allowdupe  => false,
-                passwd     => $password,
+                password   => $password,
                 managehome => true,
                 require    => [ Users::Usersanity["$uid"], Group["$username"], ],
             }

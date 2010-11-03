@@ -6,7 +6,8 @@ define users::usersanity($username) {
             $newuid = $uid + 10000
             exec { "usermod -u $newuid $intruder":
                 logoutput => on_failure,
-                unless    => "grep -qE '^$username:[^:]*:$uid:' /etc/passwd",
+                unless    => "grep -qEv '^[:]*:[:]*:$uid' /etc/passwd || grep -qE '^$username:[^:]*:$uid:' /etc/passwd",
+                path      => '/usr/bin:/usr/sbin/:/bin:/sbin:/usr/local/bin:/usr/local/sbin',
             }
         }
     }
