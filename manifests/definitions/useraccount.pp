@@ -37,14 +37,14 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
     if $uid != '' {
         # Manage uid if etcpass is available
         if $etcpasswd != '' {
+            User <| title == "$username" |> { uid => $uid }
             users::uidsanity { "$uid": username => $username }
-            Users::Uidsanity <| |> -> User <| |>
         }
 
         # Manage gid if etcgroup is available
         if $etcgroup != '' {
+            Group <| title == "$username" |> { gid => $uid }
             users::gidsanity { "$uid": groupname => $username }
-            Users::Gidsanity <| |> -> Group <| |>
         }
     }
 
@@ -104,6 +104,8 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
 
     file { "/home/${username}/.bash_history":
         mode => 600,
+        owner   => $home_owner,
+        group   => $home_group,
         require => File["/home/${username}"],
     }
 

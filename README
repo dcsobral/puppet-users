@@ -77,8 +77,6 @@ Example:
 Checks that no other user is using this uid, and, if it is, moves it
 up 10000.
 
-Sets the uid for this user.
-
 === users::gidsanity ===
 
 Checks that no other group is using this gid, and, if it is, moves it
@@ -88,6 +86,4 @@ Also, if the group exists but doesn't presently have this
 gid, pre-emptively change group owner ship of all files in the home
 directory with the current gid, so that they'll be correct after the
 group id was corrected (elsewhere).
-
-Sets the default gid for this group.
 
