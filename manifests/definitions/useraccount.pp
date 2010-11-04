@@ -91,7 +91,7 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
         "/etc/puppet/files/users/home/managed/skel",
     ]
 
-    case generate('/etc/puppet/scripts/findDirs.sh', $managedDirs) {
+    case generate('/etc/puppet/modules/users/scripts/findDirs.sh', $managedDirs) {
         '': {
             file { "/home/${username}":
                 ensure  => directory,
