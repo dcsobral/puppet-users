@@ -1,19 +1,3 @@
-# define useraccount
-# creates a user with their complete home directory, including ssh key(s),
-# shell profile(s) and anything else.
-# This define should be called to create a virtual resource so it can
-# be used to create all users, and then the users required on the particular
-# node are specified through the various user classes.
-# Example:
-# @useraccount { "username":
-#   ensure   => "present",
-#   fullname => "New User",
-#   uid      => 500,
-#   groups   => ["staff", "other"],
-#   shell    => "/bin/bash",
-#   password   => "password hash",
-# }
-
 define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [], $shell = '/bin/bash', $password = '') {
     $username = $name
     # This case statement will allow disabling an account by passing
@@ -49,14 +33,17 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
         allowdupe => false,
     }
 
-    # Manage uid if etcpass is available
-    if $etcpasswd != '' {
-        users::usersanity { "$uid": username => $username }
-    }
+    # uid/gid management
+    if $uid != '' {
+        # Manage uid if etcpass is available
+        if $etcpasswd != '' {
+            users::uidsanity { "$uid": username => $username }
+        }
 
-    # Manage uid if etcgroup is available
-    if $etcgroup != '' {
-            users::groupsanity { "$uid": groupname => $username }
+        # Manage gid if etcgroup is available
+        if $etcgroup != '' {
+                users::gidsanity { "$uid": groupname => $username }
+        }
     }
 
     $managedDirs = [
@@ -113,7 +100,10 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
         }
     }
 
-    file { "/home/${username}/.bash_history": mode => 600 }
+    file { "/home/${username}/.bash_history":
+        mode => 600,
+        require => File["/home/${username}"],
+    }
 
     file { "/home/${username}/.ssh":
         ensure  => directory,
