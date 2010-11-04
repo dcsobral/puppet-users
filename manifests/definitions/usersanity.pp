@@ -1,15 +1,29 @@
 define users::usersanity($username) {
     $uid = $name
-    case $operatingsystem {
-        "Debian": {
-            $intruder = regsubst($etcpasswd, ".*^([^:]*):[^:]*:$uid:.*", '\1', 'M')
-            $newuid = $uid + 10000
-            exec { "usermod -u $newuid $intruder":
-                logoutput => on_failure,
-                unless    => "grep -qEv '^[:]*:[:]*:$uid' /etc/passwd || grep -qE '^$username:[^:]*:$uid:' /etc/passwd",
-                path      => '/usr/bin:/usr/sbin/:/bin:/sbin:/usr/local/bin:/usr/local/sbin',
+    if $etcpasswd != '' {
+        case $operatingsystem {
+            "Debian": {
+                $whohas = regsubst($etcpasswd, ".*^([^:]*):[^:]*:$uid:.*", '\1', 'M')
+                $intruder = $whohas ? {
+                    $etcpasswd => '',
+                    default    => $whohas,
+                }
+                case $intruder {
+                    ''       : {
+                        debug("uid $uid is not in use")
+                    }
+                    $username: {
+                        debug("uid $uid already belong to $username")
+                    }
+                    default  : {
+                        $newuid = $uid + 10000
+                        exec { "usermod -u $newuid $intruder": logoutput => on_failure }
+                    }
+                }
             }
         }
+    } else {
+        fail("etcpasswd fact not available")
     }
 }
 

@@ -14,7 +14,7 @@
 #   password   => "password hash",
 # }
 
-define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [], $shell = '/bin/bash', password = '') {
+define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [], $shell = '/bin/bash', $password = '') {
     $username = $name
     # This case statement will allow disabling an account by passing
     # ensure => absent, to set the home directory ownership to root.
@@ -29,10 +29,8 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
         }
     }
 
-    users::groupsanity { "$uid": groupname => $username }
-    users::usersanity { "$uid": username => $username }
-
-    case $uid {
+    # Do not try to manage gid unless etcgroup is available
+    case $etcgroup {
         '': {
             group { "$username":
                 ensure    => $ensure,
@@ -40,6 +38,7 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
             }
         }
         default: {
+            users::groupsanity { "$uid": groupname => $username }
             group { "$username":
                 ensure    => $ensure,
                 gid       => $uid,
@@ -48,7 +47,9 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
             }
         }
     }
-    case $uid {
+
+    # Do not try to manage uid unless etcpass is available
+    case $etcpasswd {
         '': {
             user { "$username":
                 ensure     => $ensure,
@@ -64,6 +65,7 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
             }
         }
         default: {
+            users::usersanity { "$uid": username => $username }
             user { "$username":
                 ensure     => $ensure,
                 uid        => $uid,
@@ -79,22 +81,63 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
             }
         }
     }
-    file { "/home/${username}":
-        ensure    => directory,
-        owner     => $home_owner,
-        group     => $home_group,
-#        mode      => 755,
-#        recursive => true,
-#        source    => [
-#            "puppet:///files/users/home/host/${username}.$fqdn",
-#            "puppet:///files/users/home/host/${username}.$hostname",
-#            "puppet:///files/users/home/domain/${username}.$domain",
-#            "puppet:///files/users/home/env/${username}.$environment",
-#            "puppet:///files/users/home/skel",
-#            "puppet:///users/home",
-#        ]
-        require   => User["${username}"],
+
+    $managedDirs = [
+        "/etc/puppet/files/users/home/managed/host/${username}.$fqdn",
+        "/etc/puppet/files/users/home/managed/host/${username}.$hostname",
+        "/etc/puppet/files/users/home/managed/domain/${username}.$domain",
+        "/etc/puppet/files/users/home/managed/env/${username}.$environment",
+        "/etc/puppet/files/users/home/managed/user/${username}",
+        "/etc/puppet/files/users/home/managed/skel",
+    ]
+
+    case generate('/etc/puppet/scripts/findDirs.sh', $managedDirs) {
+        '': {
+            file { "/home/${username}":
+                ensure  => directory,
+                owner   => $home_owner,
+                group   => $home_group,
+                #mode    => 644,    # Cannot apply mode, or it will change ALL files
+                recurse => true,
+                replace => false,
+                ignore  => '.git',
+                source  => [
+                    "puppet:///files/users/home/default/host/${username}.$fqdn",
+                    "puppet:///files/users/home/default/host/${username}.$hostname",
+                    "puppet:///files/users/home/default/domain/${username}.$domain",
+                    "puppet:///files/users/home/default/env/${username}.$environment",
+                    "puppet:///files/users/home/default/user/${username}",
+                    "puppet:///files/users/home/default/skel",
+                    "puppet:///users/home/default",
+                ],
+                require   => User["${username}"],
+            }
+        }
+        default: {
+            file { "/home/${username}":
+                ensure  => directory,
+                owner   => $home_owner,
+                group   => $home_group,
+                #mode    => 644, # Cannot apply mode, or it will change ALL files
+                recurse => true,
+                replace => true,
+                force   => true,
+                ignore  => '.git',
+                source  => [
+                    "puppet:///files/users/home/managed/host/${username}.$fqdn",
+                    "puppet:///files/users/home/managed/host/${username}.$hostname",
+                    "puppet:///files/users/home/managed/domain/${username}.$domain",
+                    "puppet:///files/users/home/managed/env/${username}.$environment",
+                    "puppet:///files/users/home/managed/user/${username}",
+                    "puppet:///files/users/home/managed/skel",
+                ],
+                require   => User["${username}"],
+            }
+        }
     }
+
+    file { "/home/${username}/.bash_history": mode => 600 }
+
     file { "/home/${username}/.ssh":
         ensure  => directory,
         owner   => $home_owner,
@@ -102,29 +145,6 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
         mode    => 700,
         require => File["/home/${username}"],
     }
-#    file { "/home/${username}/.profile":
-#        ensure  => present,
-#        owner   => $home_owner,
-#        group   => $home_group,
-#        mode    => 640,
-#        require => File["/home/${username}"],
-#
-#        source  => "puppet:///users/${username}/.profile",
-#        source  => "puppet:///users/skel/.profile",
-#    }
-#    file { "/home/${username}/.bashrc":
-#        ensure  => present,
-#        owner   => $home_owner,
-#        group   => $home_group,
-#        mode    => 640,
-#        require => File["/home/${username}"],
-#        source  => "puppet:///users/${username}/.bashrc",
-#        source  => "puppet:///users/skel/.bashrc",
-#    }
-#    file { "/home/${username}/.bash_profile":
-#        ensure  => "/home/${username}/.bashrc",
-#        require => File["/home/${username}/.bashrc"],
-#    }
 }
 
 # vim modeline - have 'set modeline' and 'syntax on' in your ~/.vimrc.
