@@ -38,11 +38,13 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
         # Manage uid if etcpass is available
         if $etcpasswd != '' {
             users::uidsanity { "$uid": username => $username }
+            Users::Uidsanity <| |> -> User <| |>
         }
 
         # Manage gid if etcgroup is available
         if $etcgroup != '' {
-                users::gidsanity { "$uid": groupname => $username }
+            users::gidsanity { "$uid": groupname => $username }
+            Users::Gidsanity <| |> -> Group <| |>
         }
     }
 
