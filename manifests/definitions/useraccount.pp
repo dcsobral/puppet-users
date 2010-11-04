@@ -18,7 +18,7 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
         ensure     => $ensure,
         gid        => $username,
         groups     => $groups,
-        comment    => $fullname,
+        comment    => "$fullname,,,",
         home       => "/home/$username",
         shell      => $shell,
         allowdupe  => false,
