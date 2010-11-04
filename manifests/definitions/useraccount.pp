@@ -29,57 +29,34 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
         }
     }
 
-    # Do not try to manage gid unless etcgroup is available
-    case $etcgroup {
-        '': {
-            group { "$username":
-                ensure    => $ensure,
-                allowdupe => false,
-            }
-        }
-        default: {
-            users::groupsanity { "$uid": groupname => $username }
-            group { "$username":
-                ensure    => $ensure,
-                gid       => $uid,
-                allowdupe => false,
-                require   => Users::Groupsanity["$uid"],
-            }
-        }
+    # Default user settings
+    user { "$username":
+        ensure     => $ensure,
+        gid        => $username,
+        groups     => $groups,
+        comment    => $fullname,
+        home       => "/home/$username",
+        shell      => $shell,
+        allowdupe  => false,
+        password   => $password,
+        managehome => true,
+        require    => Group["$username"],
     }
 
-    # Do not try to manage uid unless etcpass is available
-    case $etcpasswd {
-        '': {
-            user { "$username":
-                ensure     => $ensure,
-                gid        => $username,
-                groups     => $groups,
-                comment    => $fullname,
-                home       => "/home/$username",
-                shell      => $shell,
-                allowdupe  => false,
-                password   => $password,
-                managehome => true,
-                require    => Group["$username"],
-            }
-        }
-        default: {
-            users::usersanity { "$uid": username => $username }
-            user { "$username":
-                ensure     => $ensure,
-                uid        => $uid,
-                gid        => $username,
-                groups     => $groups,
-                comment    => $fullname,
-                home       => "/home/$username",
-                shell      => $shell,
-                allowdupe  => false,
-                password   => $password,
-                managehome => true,
-                require    => [ Users::Usersanity["$uid"], Group["$username"], ],
-            }
-        }
+    # Default group settings
+    group { "$username":
+        ensure    => $ensure,
+        allowdupe => false,
+    }
+
+    # Manage uid if etcpass is available
+    if $etcpasswd != '' {
+        users::usersanity { "$uid": username => $username }
+    }
+
+    # Manage uid if etcgroup is available
+    if $etcgroup != '' {
+            users::groupsanity { "$uid": groupname => $username }
     }
 
     $managedDirs = [

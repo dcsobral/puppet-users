@@ -1,6 +1,7 @@
-define users::usersanity($username) {
+define users::uidsanity($username) {
     $uid = $name
     if $etcpasswd != '' {
+        User["$username"] { uid => $uid }
         case $operatingsystem {
             "Debian": {
                 $whohas = regsubst($etcpasswd, ".*^([^:]*):[^:]*:$uid:.*", '\1', 'M')
@@ -17,7 +18,10 @@ define users::usersanity($username) {
                     }
                     default  : {
                         $newuid = $uid + 10000
-                        exec { "usermod -u $newuid $intruder": logoutput => on_failure }
+                        exec { "usermod -u $newuid $intruder":
+                            logoutput => on_failure,
+                            before    => User["$username"],
+                        }
                     }
                 }
             }

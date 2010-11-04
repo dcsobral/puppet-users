@@ -1,6 +1,7 @@
-define users::groupsanity($groupname) {
+define users::gidsanity($groupname) {
     $gid = $name
     if $etcgroup != '' {
+        Group["$groupname"] { gid => $gid }
         case $operatingsystem {
             "Debian": {
                 # Check if there's some other group with the desired gid
@@ -11,16 +12,24 @@ define users::groupsanity($groupname) {
                 }
 
                 case $intruder {
+                    # Gid not in use
                     ''       : {
                         debug("gid $gid is not in use")
                     }
+
+                    # Gid already correctly assigned
                     $username: {
                         debug("gid $gid already belong to $username")
                     }
+
+                    # Gid with another group -- change the other group's gid to gid + 10000, and fix /home ownership
                     default  : {
-                        # If so, change the other group's gid to gid + 10000, and fix /home ownership
                         $newgid = $gid + 10000
-                        exec { "groupmod -g $newgid $intruder && find /home/$intruder -gid $gid -exec chgrp $newgid {} \\;": logoutput => on_failure }
+                        exec { "groupmod -g $newgid $intruder && find /home/$intruder -gid $gid -exec chgrp $newgid {} \\;":
+                            alias     => "fixgid $gid",
+                            logoutput => on_failure,
+                            before    => Group["groupname"],
+                        }
                     }
                 }
 
@@ -32,15 +41,22 @@ define users::groupsanity($groupname) {
                 }
 
                 case $currentgid {
+                    # Group not created
                     ''     : {
                         debug("group $username doesn't exist")
                     }
+
+                    # Group already correctly assigned
                     $gid   : {
                         debug("$username already has gid $gid")
                     }
+
+                    # Group with different gid -- fix /home ownership in advance (groupmod doesn't fix /home)
                     default: {
-                        # If so, fix /home ownership in advance (groupmod doesn't fix /home)
-                        exec { "find /home/$groupname -gid $currentgid -exec chgrp $gid {} \\;": logoutput => on_failure }
+                        exec { "find /home/$groupname -gid $currentgid -exec chgrp $gid {} \\;":
+                            logoutput => on_failure,
+                            before    => [ Group["groupname"], Exec["fixgid $gid"], ],
+                        }
                     }
                 }
             }
