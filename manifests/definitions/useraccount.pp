@@ -22,7 +22,6 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
         home       => "/home/$username",
         shell      => $shell,
         allowdupe  => false,
-        password   => $password,
         managehome => true,
         require    => Group["$username"],
     }
@@ -31,6 +30,11 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
     group { "$username":
         ensure    => $ensure,
         allowdupe => false,
+    }
+
+    # Set password if available
+    if $password != '' {
+        User <| title == "$username" |> { password => $password }
     }
 
     # uid/gid management
