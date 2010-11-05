@@ -1,5 +1,7 @@
 class users {
-    # Default way to add administrators
+    # Default ways to add administrators
+    Users::Massuseraccount <| tag == 'administrators' |>
+    Users::Lookup <| tag == 'administrators' |>
     Users::Useraccount <| tag == 'administrators' |>
 
     # Also realize users, groups, files and execs tagged with administrators

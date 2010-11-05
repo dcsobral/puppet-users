@@ -10,15 +10,17 @@ Supported corrective actions under: Debian.
 
 === users ===
 
-Realize all useraccount defines tagged with 'administrators'. Also,
-realize User, Group, File and Exec likewise tagged, to handle exceptional
-cases.
+Realize all useraccount, massuseraccount and lookup defines tagged with
+'administrators'. Also, realize User, Group, File and Exec likewise
+tagged, to handle exceptional cases.
 
 == Definitions ==
 
   * users::account
-  * users::usersanity
-  * users::groupsanity
+  * users::gidsanity
+  * users::lookup
+  * users::massuseraccount
+  * users::uidsanity
 
 === users::account ===
 
@@ -72,11 +74,6 @@ Example:
     password => 'hash',
 }
 
-=== users::uidsanity ===
-
-Checks that no other user is using this uid, and, if it is, moves it
-up 10000.
-
 === users::gidsanity ===
 
 Checks that no other group is using this gid, and, if it is, moves it
@@ -86,4 +83,43 @@ Also, if the group exists but doesn't presently have this
 gid, pre-emptively change group owner ship of all files in the home
 directory with the current gid, so that they'll be correct after the
 group id was corrected (elsewhere).
+
+=== users::lookup ===
+
+Add a user through extdata lookup. The user is added with the extra
+groups provided, but name, uid and password come from the csv file.
+
+Example:
+
+@users::lookup { 'username':
+    ensure => present, # default value
+    groups => [], # default value
+}
+
+CSV file:
+
+username_account,uid,Full Name,hashed password
+
+=== users::massuseraccount ===
+
+Adds users through extdata lookup. The users are added with the extra
+groups provided, but name, uid and password come from the csv files,
+as well as the list of users.
+
+Example:
+
+@users::massuseraccount { 'group':
+    ensure => present, # default value
+    groups => [], # default value
+}
+
+CSV file:
+
+group_accounts,username
+username_account,uid,Full Name,hashed password
+
+=== users::uidsanity ===
+
+Checks that no other user is using this uid, and, if it is, moves it
+up 10000.
 
