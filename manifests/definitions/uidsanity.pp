@@ -23,14 +23,16 @@ define users::uidsanity($username) {
 
                     # Uid with another user -- change the other users's uid to uid + 10000
                     default  : {
-                        # Sanity must be done before affected users
-                        Users::Uidsanity <| title == "$uid" |> -> User <| title == "$intruder" or title == "$username" |>
+                        # Sanity must be done before affected users, but it won't work with older puppet clients
+                        if versioncmp($puppetversion, '0.25') >= 0 {
+                            Exec <| tag == "moveuid_$name" |> -> User <| title == "$intruder" or title == "$username" |>
+                        }
 
                         # Move conflicting user's uid
                         $newuid = $uid + 10000
                         exec { "/usr/sbin/usermod -u $newuid $intruder":
                             logoutput => on_failure,
-                            tag       => 'moveuid',
+                            tag       => "moveuid_$name",
                         }
                     }
                 }

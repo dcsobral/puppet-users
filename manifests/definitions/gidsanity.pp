@@ -3,8 +3,10 @@ define users::gidsanity($groupname) {
     if $etcgroup != '' {
         case $operatingsystem {
             "Debian": {
-                # Always move the group id before fixing it
-                Exec <| tag == 'gidsanity' and tag == 'movegid' |> -> Exec <| tag == 'gidsanity' and tag == 'fixgid' |>
+                # Always move the group id before fixing it, but this won't work on older versions of puppet client
+                if versioncmp($puppetversion, '0.25') >= 0 {
+                    Exec <| tag == "movegid_$name" |> -> Exec <| tag == "fixgid_$name" |>
+                }
 
                 # Check if there's some other group with the desired gid
                 $whohas = regsubst($etcgroup, ".*^([^:]*):[^:]*:$gid:.*", '\1', 'M')
@@ -26,13 +28,15 @@ define users::gidsanity($groupname) {
 
                     # Gid with another group -- change the other group's gid to gid + 10000, and fix /home ownership
                     default  : {
-                        # Sanity must be done before affected groups
-                        Users::Gidsanity <| title == "$gid" |> -> Group <| title == "$intruder" or title == "$groupname" |>
+                        # Sanity must be done before affected groups, but it won't work on older versions of puppet client
+                        if versioncmp($puppetversion, '0.25') >= 0 {
+                            Exec <| tag == "movegid_$name" |> -> Group <| title == "$intruder" or title == "$groupname" |>
+                        }
 
                         # Move group and fix ownership
                         $newgid = $gid + 10000
                         exec { "/usr/sbin/groupmod -g $newgid $intruder && /usr/bin/find /home/$intruder -gid $gid -exec /bin/chgrp $newgid {} \\;":
-                            tag       => 'movegid',
+                            tag       => "movegid_$name",
                             logoutput => on_failure,
                         }
                     }
@@ -58,13 +62,15 @@ define users::gidsanity($groupname) {
 
                     # Group with different gid -- fix /home ownership in advance (groupmod doesn't fix /home)
                     default: {
-                        # Sanity must be done before affected groups
-                        Users::Gidsanity <| title == "$gid" |> -> Group <| title == "$groupname" |>
+                        # Sanity must be done before affected groups, but it won't work on older version of puppet client
+                        if versioncmp($puppetversion, '0.25') >= 0 {
+                            Exec <| tag == "fixgid_$name" |> -> Group <| title == "$groupname" |>
+                        }
 
                         # Move group and fix ownership
                         exec { "/usr/bin/find /home/$groupname -gid $currentgid -exec /bin/chgrp $gid {} \\;":
                             logoutput => on_failure,
-                            tag       => 'fixgid',
+                            tag       => "fixgid_$name",
                         }
                     }
                 }
