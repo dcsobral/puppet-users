@@ -43,6 +43,7 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
 
         # Manage gid if etcgroup is available
         if $etcgroup != '' {
+            User <| title == "$username" |> { gid => $uid }
             Group <| title == "$username" |> { gid => $uid }
             users::gidsanity { "$uid": groupname => $username }
         }
