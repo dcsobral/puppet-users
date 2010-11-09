@@ -14,7 +14,7 @@ Realize all useraccount, massuseraccount and lookup defines tagged with
 'administrators'. Also, realize User, Group, File and Exec likewise
 tagged, to handle exceptional cases.
 
-=# Definitions ##
+## Definitions ##
 
     * users::account
     * users::gidsanity
