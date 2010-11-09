@@ -36,27 +36,27 @@ Also copy a tree of files in one of two ways:
 1. If there's a "managed" directory from one of the options below, use it and control
 file content. The file paths checked for are absolute, so it may need changing if the
 default file server path is different. Also, it uses a script at
-/etc/puppet/modules/users/scripts to check for these files, which may also need changing
+`/etc/puppet/modules/users/scripts` to check for these files, which may also need changing
 depending on the module path and module name.
 
-    * /etc/puppet/files/users/home/managed/host/${username}.$fqdn
-    * /etc/puppet/files/users/home/managed/host/${username}.$hostname
-    * /etc/puppet/files/users/home/managed/domain/${username}.$domain
-    * /etc/puppet/files/users/home/managed/env/${username}.$environment
-    * /etc/puppet/files/users/home/managed/user/${username}
-    * /etc/puppet/files/users/home/managed/skel
+    * `/etc/puppet/files/users/home/managed/host/${username}.$fqdn`
+    * `/etc/puppet/files/users/home/managed/host/${username}.$hostname`
+    * `/etc/puppet/files/users/home/managed/domain/${username}.$domain`
+    * `/etc/puppet/files/users/home/managed/env/${username}.$environment`
+    * `/etc/puppet/files/users/home/managed/user/${username}`
+    * `/etc/puppet/files/users/home/managed/skel`
 
 2. Otherwise, use one of the directories below as a default (modified files do
 not get replaced).
 
-    * puppet:///files/users/home/default/host/${username}.$fqdn
-    * puppet:///files/users/home/default/host/${username}.$hostname
-    * puppet:///files/users/home/default/domain/${username}.$domain
-    * puppet:///files/users/home/default/env/${username}.$environment
-    * puppet:///files/users/home/default/user/${username}
-    * puppet:///files/users/home/default/skel
-    * puppet:///files/users/home/default/skel
-    * puppet:///users/home/default/skel
+    * `puppet:///files/users/home/default/host/${username}.$fqdn`
+    * `puppet:///files/users/home/default/host/${username}.$hostname`
+    * `puppet:///files/users/home/default/domain/${username}.$domain`
+    * `puppet:///files/users/home/default/env/${username}.$environment`
+    * `puppet:///files/users/home/default/user/${username}`
+    * `puppet:///files/users/home/default/skel`
+    * `puppet:///files/users/home/default/skel`
+    * `puppet:///users/home/default/skel`
 
 In neither case will other files be purged. Also, there is no mode control, though all
 files will be created with user and group onwership.
