@@ -6,7 +6,7 @@ Supported corrective actions under: Debian.
 
 ## Classes ##
 
-    * users
+* users
 
 ### users ###
 
@@ -16,11 +16,11 @@ tagged, to handle exceptional cases.
 
 ## Definitions ##
 
-    * users::account
-    * users::gidsanity
-    * users::lookup
-    * users::massuseraccount
-    * users::uidsanity
+* users::account
+* users::gidsanity
+* users::lookup
+* users::massuseraccount
+* users::uidsanity
 
 ### users::account ###
 
