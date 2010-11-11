@@ -110,8 +110,12 @@ which will be prepended with the username to avoid problems with it
 being used as primary key on ssh_authorized_keys when multiple users
 are using the same key.
 
-Options containing quotes should be enclosed in quotes themselves, and
-its own quotes doubled (see example).
+Options containing double quotes should be enclosed in double quotes
+themselves, and its own double quotes doubled (see example).
+
+The CSV format was designed to be almost equal to authorized_keys itself,
+with just the need to replace spaces separating options, key type, key
+and comment with commas, plus the above mentioned double quote handling.
 
 Example:
 
