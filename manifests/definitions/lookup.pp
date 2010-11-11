@@ -1,9 +1,9 @@
 define users::lookup($ensure = present, $groups = []) {
     # Waiting for fix #5127
     $data = extlookup("${name}_account")
-    $uid = inline_template("<%= data[0] %>") # $data[0]
-    $fullname = inline_template("<%= data[1] %>") # $data[1]
-    $password = inline_template("<%= data[2] %>") # $data[2]
+    $uid = array_index($data, 0)
+    $fullname = array_index($data, 1)
+    $password = array_index($data, 2)
 
     users::useraccount { "$name":
             ensure   => $ensure,
