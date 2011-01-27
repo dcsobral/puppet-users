@@ -23,13 +23,18 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
         shell      => $shell,
         allowdupe  => false,
         managehome => true,
-        require    => Group["$username"],
     }
 
     # Default group settings
     group { "$username":
         ensure    => $ensure,
         allowdupe => false,
+    }
+
+    # Ordering of dependencies, just in case
+    case $ensure {
+        present: { User <| title == "$username" |> { require => Group["$username"] } }
+        absent: { Group <| title == "$username" |> { require => User["$username"] } }
     }
 
     # Set password if available
@@ -53,57 +58,67 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
         }
     }
 
-    $managedDirs = [
-        "/etc/puppet/files/users/home/managed/host/${username}.$fqdn",
-        "/etc/puppet/files/users/home/managed/host/${username}.$hostname",
-        "/etc/puppet/files/users/home/managed/domain/${username}.$domain",
-        "/etc/puppet/files/users/home/managed/env/${username}.$environment",
-        "/etc/puppet/files/users/home/managed/user/${username}",
-        "/etc/puppet/files/users/home/managed/skel",
-    ]
+    if versioncmp($puppetversion, '0.25') >= 0 {
+        $managedDirs = [
+            "/etc/puppet/files/users/home/managed/host/${username}.$fqdn",
+            "/etc/puppet/files/users/home/managed/host/${username}.$hostname",
+            "/etc/puppet/files/users/home/managed/domain/${username}.$domain",
+            "/etc/puppet/files/users/home/managed/env/${username}.$environment",
+            "/etc/puppet/files/users/home/managed/user/${username}",
+            "/etc/puppet/files/users/home/managed/skel",
+        ]
 
-    case generate('/etc/puppet/modules/users/scripts/findDirs.sh', $managedDirs) {
-        '': {
-            file { "/home/${username}":
-                ensure  => directory,
-                owner   => $home_owner,
-                group   => $home_group,
-                #mode    => 644,    # Cannot apply mode, or it will change ALL files
-                recurse => true,
-                replace => false,
-                ignore  => '.git',
-                source  => [
-                    "puppet:///files/users/home/default/host/${username}.$fqdn",
-                    "puppet:///files/users/home/default/host/${username}.$hostname",
-                    "puppet:///files/users/home/default/domain/${username}.$domain",
-                    "puppet:///files/users/home/default/env/${username}.$environment",
-                    "puppet:///files/users/home/default/user/${username}",
-                    "puppet:///files/users/home/default/skel",
-                    "puppet:///users/home/default",
-                ],
-                require   => User["${username}"],
+        case generate('/etc/puppet/modules/users/scripts/findDirs.sh', $managedDirs) {
+            '': {
+                file { "/home/${username}":
+                    ensure  => directory,
+                    owner   => $home_owner,
+                    group   => $home_group,
+                    #mode    => 644,    # Cannot apply mode, or it will change ALL files
+                    recurse => remote,
+                    replace => false,
+                    ignore  => '.git',
+                    source  => [
+                        "puppet:///files/users/home/default/host/${username}.$fqdn",
+                        "puppet:///files/users/home/default/host/${username}.$hostname",
+                        "puppet:///files/users/home/default/domain/${username}.$domain",
+                        "puppet:///files/users/home/default/env/${username}.$environment",
+                        "puppet:///files/users/home/default/user/${username}",
+                        "puppet:///files/users/home/default/skel",
+                        "puppet:///users/home/default",
+                    ],
+                    require   => User["${username}"],
+                }
+            }
+            default: {
+                file { "/home/${username}":
+                    ensure  => directory,
+                    owner   => $home_owner,
+                    group   => $home_group,
+                    #mode    => 644, # Cannot apply mode, or it will change ALL files
+                    recurse => remote,
+                    replace => true,
+                    force   => true,
+                    ignore  => '.git',
+                    source  => [
+                        "puppet:///files/users/home/managed/host/${username}.$fqdn",
+                        "puppet:///files/users/home/managed/host/${username}.$hostname",
+                        "puppet:///files/users/home/managed/domain/${username}.$domain",
+                        "puppet:///files/users/home/managed/env/${username}.$environment",
+                        "puppet:///files/users/home/managed/user/${username}",
+                        "puppet:///files/users/home/managed/skel",
+                    ],
+                    require   => User["${username}"],
+                }
             }
         }
-        default: {
-            file { "/home/${username}":
-                ensure  => directory,
-                owner   => $home_owner,
-                group   => $home_group,
-                #mode    => 644, # Cannot apply mode, or it will change ALL files
-                recurse => true,
-                replace => true,
-                force   => true,
-                ignore  => '.git',
-                source  => [
-                    "puppet:///files/users/home/managed/host/${username}.$fqdn",
-                    "puppet:///files/users/home/managed/host/${username}.$hostname",
-                    "puppet:///files/users/home/managed/domain/${username}.$domain",
-                    "puppet:///files/users/home/managed/env/${username}.$environment",
-                    "puppet:///files/users/home/managed/user/${username}",
-                    "puppet:///files/users/home/managed/skel",
-                ],
-                require   => User["${username}"],
-            }
+    } else {
+        file { "/home/${username}":
+            ensure  => directory,
+            owner   => $home_owner,
+            group   => $home_group,
+            mode    => 644, # Cannot apply mode, or it will change ALL files
+            require   => User["${username}"],
         }
     }
 
