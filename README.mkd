@@ -68,7 +68,7 @@ permissions.
 
 Example:
 
-    @useracount { "bob":
+    @users::useracount { "bob":
         ensure   => present,
         uid      => 1000,
         groups   => [ "wheel" ], # Extra groups, defaults to none
@@ -134,7 +134,7 @@ users::lookupkey for more details.
 
 Example:
 
-    @users:masskeys { 'group':
+    @users::masskeys { 'group':
         ensure => present, # default value
     }
 
