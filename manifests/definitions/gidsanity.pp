@@ -35,8 +35,7 @@ define users::gidsanity($groupname) {
 
                         # Move group and fix ownership
                         $newgid = $gid + 10000
-                        exec { "/usr/sbin/groupmod -g $newgid $intruder && /usr/bin/find /home/$intruder -gid $gid -exec /bin/chgrp $newgid {} \\;":
-                            onlyif    => "/usr/bin/test -d /home/$intruder",
+                        exec { "/usr/sbin/groupmod -g $newgid $intruder && /usr/bin/test ! -d /home/$intruder || /usr/bin/find /home/$intruder -gid $gid -exec /bin/chgrp $newgid {} \\;":
                             logoutput => on_failure,
                             tag       => "movegid_$name",
                         }
