@@ -71,14 +71,14 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
         case generate('/etc/puppet/modules/users/scripts/findDirs.sh', $managedDirs) {
             '': {
                 file { "/home/${username}":
-                    ensure  => directory,
-                    owner   => $home_owner,
-                    group   => $home_group,
-                    #mode    => 644,    # Cannot apply mode, or it will change ALL files
-                    recurse => remote,
-                    replace => false,
-                    ignore  => '.git',
-                    source  => [
+                    ensure       => directory,
+                    owner        => $home_owner,
+                    group        => $home_group,
+                    #mode        => 644,    # Cannot apply mode, or it will change ALL files
+                    recurse      => remote,
+                    replace      => false,
+                    ignore       => '.git',
+                    source       => [
                         "puppet:///files/users/home/default/host/${username}.$fqdn",
                         "puppet:///files/users/home/default/host/${username}.$hostname",
                         "puppet:///files/users/home/default/domain/${username}.$domain",
@@ -87,20 +87,21 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
                         "puppet:///files/users/home/default/skel",
                         "puppet:///users/home/default",
                     ],
-                    require   => User["${username}"],
+                    sourceselect => all,
+                    require      => User["${username}"],
                 }
             }
             default: {
                 file { "/home/${username}":
-                    ensure  => directory,
-                    owner   => $home_owner,
-                    group   => $home_group,
-                    #mode    => 644, # Cannot apply mode, or it will change ALL files
-                    recurse => remote,
-                    replace => true,
-                    force   => true,
-                    ignore  => '.git',
-                    source  => [
+                    ensure       => directory,
+                    owner        => $home_owner,
+                    group        => $home_group,
+                    #mode        => 644, # Cannot apply mode, or it will change ALL files
+                    recurse      => remote,
+                    replace      => true,
+                    force        => true,
+                    ignore       => '.git',
+                    source       => [
                         "puppet:///files/users/home/managed/host/${username}.$fqdn",
                         "puppet:///files/users/home/managed/host/${username}.$hostname",
                         "puppet:///files/users/home/managed/domain/${username}.$domain",
@@ -108,7 +109,8 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
                         "puppet:///files/users/home/managed/user/${username}",
                         "puppet:///files/users/home/managed/skel",
                     ],
-                    require   => User["${username}"],
+                    sourceselect => all,
+                    require      => User["${username}"],
                 }
             }
         }
