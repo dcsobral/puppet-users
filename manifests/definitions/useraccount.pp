@@ -58,85 +58,98 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
         }
     }
 
-    if versioncmp($puppetversion, '0.25') >= 0 {
-        $managedDirs = [
-            "/etc/puppet/files/users/home/managed/host/${username}.$fqdn",
-            "/etc/puppet/files/users/home/managed/host/${username}.$hostname",
-            "/etc/puppet/files/users/home/managed/domain/${username}.$domain",
-            "/etc/puppet/files/users/home/managed/env/${username}.$environment",
-            "/etc/puppet/files/users/home/managed/user/${username}",
-            "/etc/puppet/files/users/home/managed/skel",
-        ]
+    case $ensure {
+        present: {
+            if versioncmp($puppetversion, '0.25') >= 0 {
+                $managedDirs = [
+                    "/etc/puppet/files/users/home/managed/host/${username}.$fqdn",
+                    "/etc/puppet/files/users/home/managed/host/${username}.$hostname",
+                    "/etc/puppet/files/users/home/managed/domain/${username}.$domain",
+                    "/etc/puppet/files/users/home/managed/env/${username}.$environment",
+                    "/etc/puppet/files/users/home/managed/user/${username}",
+                    "/etc/puppet/files/users/home/managed/skel",
+                ]
 
-        case generate('/etc/puppet/modules/users/scripts/findDirs.sh', $managedDirs) {
-            '': {
+                case generate('/etc/puppet/modules/users/scripts/findDirs.sh', $managedDirs) {
+                    '': {
+                        file { "/home/${username}":
+                            ensure       => $ensure ? {
+                                present => directory,
+                                absent  => absent,
+                            },
+                            owner        => $home_owner,
+                            group        => $home_group,
+                            #mode        => 644,    # Cannot apply mode, or it will change ALL files
+                            recurse      => remote,
+                            replace      => false,
+                            ignore       => '.git',
+                            source       => [
+                                "puppet:///files/users/home/default/host/${username}.$fqdn",
+                                "puppet:///files/users/home/default/host/${username}.$hostname",
+                                "puppet:///files/users/home/default/domain/${username}.$domain",
+                                "puppet:///files/users/home/default/env/${username}.$environment",
+                                "puppet:///files/users/home/default/user/${username}",
+                                "puppet:///files/users/home/default/skel",
+                                "puppet:///users/home/default",
+                            ],
+                            sourceselect => all,
+                            require      => User["${username}"],
+                        }
+                    }
+                    default: {
+                        file { "/home/${username}":
+                            ensure       => $ensure ? {
+                                present => directory,
+                                absent  => absent,
+                            },
+                            owner        => $home_owner,
+                            group        => $home_group,
+                            #mode        => 644, # Cannot apply mode, or it will change ALL files
+                            recurse      => remote,
+                            replace      => true,
+                            force        => true,
+                            ignore       => '.git',
+                            source       => [
+                                "puppet:///files/users/home/managed/host/${username}.$fqdn",
+                                "puppet:///files/users/home/managed/host/${username}.$hostname",
+                                "puppet:///files/users/home/managed/domain/${username}.$domain",
+                                "puppet:///files/users/home/managed/env/${username}.$environment",
+                                "puppet:///files/users/home/managed/user/${username}",
+                                "puppet:///files/users/home/managed/skel",
+                            ],
+                            sourceselect => all,
+                            require      => User["${username}"],
+                        }
+                    }
+                }
+            } else {
                 file { "/home/${username}":
-                    ensure       => directory,
-                    owner        => $home_owner,
-                    group        => $home_group,
-                    #mode        => 644,    # Cannot apply mode, or it will change ALL files
-                    recurse      => remote,
-                    replace      => false,
-                    ignore       => '.git',
-                    source       => [
-                        "puppet:///files/users/home/default/host/${username}.$fqdn",
-                        "puppet:///files/users/home/default/host/${username}.$hostname",
-                        "puppet:///files/users/home/default/domain/${username}.$domain",
-                        "puppet:///files/users/home/default/env/${username}.$environment",
-                        "puppet:///files/users/home/default/user/${username}",
-                        "puppet:///files/users/home/default/skel",
-                        "puppet:///users/home/default",
-                    ],
-                    sourceselect => all,
-                    require      => User["${username}"],
+                    ensure  => $ensure ? {
+                        present => directory,
+                        absent  => absent,
+                    },
+                    owner   => $home_owner,
+                    group   => $home_group,
+                    mode    => 644, # Cannot apply mode, or it will change ALL files
+                    require   => User["${username}"],
                 }
             }
-            default: {
-                file { "/home/${username}":
-                    ensure       => directory,
-                    owner        => $home_owner,
-                    group        => $home_group,
-                    #mode        => 644, # Cannot apply mode, or it will change ALL files
-                    recurse      => remote,
-                    replace      => true,
-                    force        => true,
-                    ignore       => '.git',
-                    source       => [
-                        "puppet:///files/users/home/managed/host/${username}.$fqdn",
-                        "puppet:///files/users/home/managed/host/${username}.$hostname",
-                        "puppet:///files/users/home/managed/domain/${username}.$domain",
-                        "puppet:///files/users/home/managed/env/${username}.$environment",
-                        "puppet:///files/users/home/managed/user/${username}",
-                        "puppet:///files/users/home/managed/skel",
-                    ],
-                    sourceselect => all,
-                    require      => User["${username}"],
-                }
+
+            file { "/home/${username}/.bash_history":
+                mode => 600,
+                owner   => $home_owner,
+                group   => $home_group,
+                require => File["/home/${username}"],
+            }
+
+            file { "/home/${username}/.ssh":
+                ensure  => directory,
+                owner   => $home_owner,
+                group   => $home_group,
+                mode    => 700,
+                require => File["/home/${username}"],
             }
         }
-    } else {
-        file { "/home/${username}":
-            ensure  => directory,
-            owner   => $home_owner,
-            group   => $home_group,
-            mode    => 644, # Cannot apply mode, or it will change ALL files
-            require   => User["${username}"],
-        }
-    }
-
-    file { "/home/${username}/.bash_history":
-        mode => 600,
-        owner   => $home_owner,
-        group   => $home_group,
-        require => File["/home/${username}"],
-    }
-
-    file { "/home/${username}/.ssh":
-        ensure  => directory,
-        owner   => $home_owner,
-        group   => $home_group,
-        mode    => 700,
-        require => File["/home/${username}"],
     }
 }
 
