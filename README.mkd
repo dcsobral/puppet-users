@@ -68,8 +68,9 @@ permissions.
 
 Example:
 
-    @users::useracount { "bob":
+    @users::useraccount { "bob":
         ensure   => present,
+        fullname => "Uncle Bob",
         uid      => 1000,
         groups   => [ "wheel" ], # Extra groups, defaults to none
         shell    => '/bin/bash', # default value
