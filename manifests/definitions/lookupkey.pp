@@ -16,6 +16,7 @@ define users::lookupkey($ensure = present) {
         type    => $type,
         user    => $name,
         options => $options,
+        target  => "/home/${name}/.ssh/authorized_keys",
         require => [ User[$name], File["/home/${name}/.ssh"], ],
     }
 }
