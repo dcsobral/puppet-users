@@ -82,7 +82,7 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
                             #mode        => 644,    # Cannot apply mode, or it will change ALL files
                             recurse      => remote,
                             replace      => false,
-                            ignore       => '.git',
+                            ignore       => '*.git',
                             source       => [
                                 "puppet:///files/users/home/default/host/${username}.$fqdn",
                                 "puppet:///files/users/home/default/host/${username}.$hostname",
