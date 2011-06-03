@@ -12,12 +12,12 @@ define users::lookupkey($ensure = present) {
 
     ssh_authorized_key { "${name}_${comment}":
         ensure  => $ensure,
-        key     => $key,
-        type    => $type,
-        user    => $name,
+        key     => "$key",
+        type    => "$type",
+        user    => "$name",
         options => $options,
         target  => "/home/${name}/.ssh/authorized_keys",
-        require => [ User[$name], File["/home/${name}/.ssh"], ],
+        require => [ User["$name"], File["/home/${name}/.ssh"], ],
     }
 }
 
