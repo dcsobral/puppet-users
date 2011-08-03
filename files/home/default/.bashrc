@@ -107,6 +107,6 @@ fi
 # alias mv='mv -i'
 
 EDITOR=/usr/bin/vim;        export EDITOR
-LESS=-eiMqFWX;          export LESS
+LESS=-eiMqFWXR;             export LESS
 PAGER=/usr/bin/less;        export PAGER
 
