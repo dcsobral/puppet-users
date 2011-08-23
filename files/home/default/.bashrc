@@ -49,10 +49,15 @@ if [ -n "$force_color_prompt" ]; then
     fi
 fi
 
+# If there's git available, get the branch on the prompt
+if type -t __git_ps1 >/dev/null; then
+    GITPS1='$(__git_ps1)'
+fi
+
 if [ "$color_prompt" = yes ]; then
-    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[0;31m\]'"$GITPS1"'\[\033[00m\]\$ '
 else
-    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w'"$GITPS1"'\$ '
 fi
 unset color_prompt force_color_prompt
 
