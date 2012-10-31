@@ -128,6 +128,22 @@ CSV file:
 
     username_sshkey,"from=""a.b.c.d""",no-port-forwarding,ssh-dss,key,comment
 
+
+
+### users::lookupkey ###
+
+Add a key to user's authorized keys file through direct passing.
+Default comment on key is "default-key" and default type is "ssh-rsa".
+
+Example:
+
+    @users::userkey { 'username':
+        ensure => present,
+	key    => "key",
+    }
+
+
+
 ### users::masskeys ###
 
 Add keys to user's authorized_keys files through extdata lookup. See
