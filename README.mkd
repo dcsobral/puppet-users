@@ -130,7 +130,7 @@ CSV file:
 
 
 
-### users::lookupkey ###
+### users::userkey###
 
 Add a key to user's authorized keys file through direct passing.
 Default comment on key is "default-key" and default type is "ssh-rsa".
@@ -139,7 +139,7 @@ Example:
 
     @users::userkey { 'username':
         ensure => present,
-	key    => "key",
+        key    => "key",
     }
 
 
