@@ -44,7 +44,7 @@ define users::useraccount ( $ensure = present, $fullname, $uid = '', $groups = [
 
     # uid/gid management
     if $uid != '' {
-        # Manage uid if etcpass is available
+        # Manage uid if etcpasswd is available
         if $etcpasswd != '' {
             User <| title == "$username" |> { uid => $uid }
             users::uidsanity { "$uid": username => $username }
